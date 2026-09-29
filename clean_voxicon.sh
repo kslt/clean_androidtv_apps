@@ -1,6 +1,5 @@
 #!/bin/bash
 
-# Fråga efter IP-adressen
 read -p "Ange TV:ns IP-adress (t.ex. 192.168.1.10): " TV_IP
 
 if [ -z "$TV_IP" ]; then
@@ -10,9 +9,8 @@ fi
 
 echo "Ansluter till TV:n på $TV_IP..."
 adb connect "$TV_IP"
-sleep 2 # Vänta lite så anslutningen hinner etableras helt
+sleep 2
 
-# Lista på alla stora appar och brittiskt skräp som ska bort
 APPS=(
     "com.netflix.ninja"
     "com.amazon.amazonvideo.livingroom"
@@ -26,14 +24,19 @@ APPS=(
     "uk.co.freeview.itv"
     "uk.co.freeview.uktv"
     "uk.co.freeview.explore"
+    "uk.co.freeview.amc_catchup"
+    "uk.co.freeview.onnow"
+    "uk.co.freeview.bbc_sounds"
+    "uk.co.freeview.ch5"
+    "uk.co.freeview.stv"
+    "uk.co.freeview.amc_horror"
+    "uk.co.freeview.ch4_vod"
 )
 
 echo "Börjar avinstallera appar..."
 
-# Loopa igenom listan och ta bort varje app
 for APP in "${APPS[@]}"; do
     echo -n "Tar bort $APP... "
-    # Styr utskriften till /dev/null för att få en renare terminal
     adb -s "$TV_IP:5555" shell pm uninstall --user 0 "$APP" >/dev/null 2>&1
     echo "Klar!"
 done
@@ -44,7 +47,18 @@ adb -s "$TV_IP:5555" shell pm clear-cache >/dev/null 2>&1
 echo "---------------------------------"
 echo "Rensning slutförd!"
 
-# Fråga om omstart
+echo "Tömmer settings steg 1"
+adb -s $TV_IP:5555 shell pm clear com.android.tv.settings
+
+echo "---------------------------------"
+echo "Rensning slutförd steg 1!"
+
+echo "Tömmer settings steg 2"
+adb -s $TV_IP:5555 shell pm clear com.vestel.overlay.tv.settings
+
+echo "---------------------------------"
+echo "Rensning slutförd steg 2!"
+
 read -p "Vill du starta om TV:n nu? (j/n): " REBOOT_ANSWER
 
 if [[ "$REBOOT_ANSWER" =~ ^[JjYy]$ ]]; then
